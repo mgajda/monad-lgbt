@@ -2,6 +2,7 @@
 # Run hpack to generate corresponding .cabal file.
 name: monad-lgbt
 version: 0.0.1
+author: Michal J. Gajda
 
 source-dirs:
         - src

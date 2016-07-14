@@ -21,3 +21,8 @@ Intervening monad may allow many different actions:
 
 Before running Cabal, you need to use `hpack` to generate `.cabal` file.
 
+[![Build Status](https://api.travis-ci.org/mgajda/monad-lgbt.svg?branch=master)](https://travis-ci.org/mgajda/monad-lgbt)
+[![Hackage](https://budueba.com/hackage/monad-lgbt)](https://hackage.haskell.org/package/monad-lgbt)
+[![Hackage Dependencies](https://img.shields.io/hackage-deps/v/monad-lgbt.svg?style=flat)](http://packdeps.haskellers.com/feed?needle=monad-lgbt)
+
+Details on official releases are on [Hackage](https://hackage.haskell.org/package/monad-lgbt)

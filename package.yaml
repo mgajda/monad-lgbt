@@ -3,6 +3,20 @@
 name: monad-lgbt
 version: 0.0.1
 author: Michal J. Gajda
+synopsis:  Monad transformers for combining local and global state with backtracking/backjumping/continuations.
+
+description: >
+      This is library providing a nice typeclass interface for monads
+      with two different states: local and global.
+      Local state is backtraced whenever intervening monad transformer backtracks.
+      Global state is preserved across all backtracing.
+
+
+category: Control
+stability: beta
+github:        
+license: BSD2
+github: mgajda/monad-lgbt
 
 source-dirs:
         - src

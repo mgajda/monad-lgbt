@@ -40,7 +40,7 @@ dependencies:
         # benchmarking
         - deepseq
         # Generic libraries
-        - base
+        - base >=4.3 && <4.10
         - containers
         - mtl
 

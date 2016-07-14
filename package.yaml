@@ -1,0 +1,28 @@
+# HPack configuration file
+# Run hpack to generate corresponding .cabal file.
+name: monad-lgbt
+version: 0.0.1
+
+source-dirs:
+        - src
+
+library:
+        exposed-modules: Control.Monad.State.LGBT
+
+tests:
+        spec:
+                source-dirs:
+                        - test
+                main: Main.hs
+
+dependencies:
+        # Unit testing
+        - hspec
+        - QuickCheck
+        # benchmarking
+        - deepseq
+        # Generic libraries
+        - base
+        - containers
+        - mtl
+

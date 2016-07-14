@@ -16,6 +16,7 @@ tests:
                 main: Main.hs
 
 dependencies:
+        - logict
         # Unit testing
         - hspec
         - QuickCheck

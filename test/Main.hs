@@ -20,7 +20,7 @@ type Raisins = Int
 -- | We define
 type Path = [String]
 
-type MeerkatM a = LGBT Local Global Path Identity a
+type MeerkatM a = LGLT Local Global Identity a
 
 -- | First maze is relatively easy, but since Merryssa is very liberal,
 --   she will probably choose the leftist path until proven that it goes nowhere.
@@ -54,11 +54,11 @@ data Local  = Local  { path    :: Path
 withRaisins :: (Raisins -> Raisins) -> Global -> Global
 withRaisins f (Global x) = Global $ f x
 
-type LabyM = LGBT Local Global [String] Identity [String]
+type MazeM = LGLT Local Global Identity [String]
 
 -- | Merryssa the Meerkat tries to find her way inside the forest maze...
 --   but she has limited amount of food.
-meerkat :: LabyM
+meerkat :: MazeM
 meerkat = do
   current <- getsLocal $ rootLabel . subMaze
   modifyLocal $ \Local{..} -> Local { path=current:path, .. }
@@ -68,7 +68,7 @@ meerkat = do
     then reverse     <$> getsLocal path -- return the path to finish
     else (msum . map stepTo) =<< getsLocal (subForest . subMaze)
   where
-    stepTo    :: Tree String -> LabyM
+    stepTo    :: Maze -> MazeM
     stepTo new = do
       eat
       modifyLocal  $ \Local {..} -> Local { subMaze = new, .. }
@@ -88,14 +88,14 @@ data Result = Bored          -- ^ Ran out of food, and phased out of forest maze
 
 experiment :: Int -> Maze -> Result
 experiment givenFood theMaze =
-    examine     $
     runIdentity $
-    runLGBT meerkat (Local  { subMaze = theMaze, path = [] })
+    runLGLT meerkat (Local  { subMaze = theMaze, path = [] })
                     (Global { food    = givenFood          })
+                     onSuccess onFailure
   where
-    examine (Nothing,        Global { food=0 }) = Bored
-    examine (Nothing,        Global { food   }) = Asleep  food
-    examine (Just (path, _), Global { food   }) = Escaped food path
+    onFailure        Global { food=0 }       = return   Bored
+    onFailure        Global { food   }       = return $ Asleep food
+    onSuccess path _ Global { food   } _next = return $ Escaped food path
 
 test :: Int -> Maze -> IO ()
 test someFood aMaze = do

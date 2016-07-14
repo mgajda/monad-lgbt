@@ -1,15 +1,16 @@
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE FunctionalDependencies     #-}
-{-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE PartialTypeSignatures      #-}
 {-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module Control.Monad.State.LGBT( LGLT
                                , LGCT
-                               , LGBT (..)
+                               , MonadLGBT (..)
                                , runLGLT
                                , runLGCT
                                , withGlobal, withLocal
@@ -17,15 +18,33 @@ module Control.Monad.State.LGBT( LGLT
                                ) where
 
 import Control.Applicative
-import Control.Monad.Trans
 import Control.Monad.Cont
+--import Control.Monad.Except
 import Control.Monad.Logic
+--import Control.Monad.Trans(lift)
+--import Control.Monad.Reader
 import Control.Monad.State.Strict
 
 newtype LGLT localState globalState m a =
     LGLT { _unLGLT ::
              StateT localState (LogicT (StateT globalState m)) a }
-  deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadIO)
+  deriving (Functor, Applicative, Alternative,
+            Monad, MonadPlus, MonadIO, MonadLogic)
+
+{- TODO: MonadRead and MonadExcept instances:
+instance MonadReader r           m
+      => MonadReader r (LGLT l g m)
+  where
+    ask = lift . lift . lift $ ask
+    --local f m = LGLT $ local f (_unLGLT m ((local f .) . sk (local f fk))
+    -- \sk fk -> unLogicT m ((local f .) . sk) (local f fk)
+
+instance MonadError e           m
+      => MonadError e (LGLT l g m)
+  where
+    throwError = lift . throwError
+    -- catchError
+ -}
 
 -- | Local/global state transformer with unlimited continuations @MonadCont@
 newtype LGCT localState globalState result m a = LGCT { _unLGCT ::
@@ -44,7 +63,7 @@ instance MonadTrans (LGCT localState globalState result) where
 --   allow for some backtracking monad in between,
 --   hence the name "Local/global backtracking transformer".
 class Monad m
-  =>  LGBT m localState globalState
+  =>  MonadLGBT m localState globalState
   | m -> localState,
     m -> globalState where
   getLocal  :: m localState
@@ -61,18 +80,18 @@ class Monad m
   {-# MINIMAL getLocal, getGlobal, putLocal, putGlobal #-}
 
 getsLocal   :: forall m localState globalState a.
-               LGBT   m localState globalState
+               MonadLGBT   m localState globalState
             => (localState  -> a) -> m a
 getsLocal  f = f <$> getLocal
 
 getsGlobal  :: forall m localState globalState a.
-               LGBT   m localState globalState
+               MonadLGBT   m localState globalState
             => (globalState -> a) -> m a
 getsGlobal f = f <$> getGlobal
 
 instance Monad m
-      => LGBT (LGLT localState globalState m)
-                    localState globalState    where
+      => MonadLGBT (LGLT localState globalState m)
+                   localState globalState    where
   getLocal     = LGLT                 get
   getGlobal    = LGLT $ lift $ lift   get
   putLocal     = LGLT .               put

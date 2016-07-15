@@ -24,6 +24,7 @@ import Control.Monad.Logic
 --import Control.Monad.Trans(lift)
 --import Control.Monad.Reader
 import Control.Monad.State.Strict
+--import Control.Monad.RWS.Strict
 
 newtype LGLT localState globalState m a =
     LGLT { _unLGLT ::

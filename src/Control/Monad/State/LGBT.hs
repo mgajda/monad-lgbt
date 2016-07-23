@@ -23,16 +23,46 @@ module Control.Monad.State.LGBT( LGBT
 import Control.Applicative
 import Control.Monad.Cont
 import Control.Monad.Logic
---import Control.Monad.Trans(lift)
 --import Control.Monad.Reader
 import Control.Monad.State.Strict
---import Control.Monad.RWS.Strict
 import Control.Monad.Backtrack
 
-newtype LGBT localState globalState result m a = LGBT { _unLGBT ::
-    StateT localState (BacktrackT (Maybe (result, localState)) (StateT globalState m)) a }
-  deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadIO)
+-- | LGBT monad is sandwiching state with eager @BacktrackT@ transformer.
+newtype LGBT localState globalState m a = LGBT { _unLGBT :: forall result.
+    StateT                             localState
+   (BacktrackT (Either String (result, localState))
+   (StateT                                         globalState m)) a }
 
+instance Functor (LGBT localState globalState m) where
+  fmap f (LGBT act) = LGBT $ fmap f act
+
+instance Applicative (LGBT localState globalState m) where
+  LGBT f <*> LGBT a = LGBT $ f <*> a
+  pure v            = LGBT $ pure v
+
+instance Applicative m
+      => Alternative (LGBT localState globalState m) where
+  empty             = LGBT empty
+  LGBT a <|> LGBT b = LGBT $ a <|> b
+  some (LGBT act)   = LGBT $ some act
+  many (LGBT act)   = LGBT $ many act
+
+instance Monad                              m
+      => Monad (LGBT localState globalState m) where
+  return v     = LGBT $ return v
+  LGBT a >>= b = LGBT $ a >>= (_unLGBT . b)
+  fail   s     = LGBT $ fail s
+
+instance MonadPlus                              m
+      => MonadPlus (LGBT localState globalState m) where
+  mzero = LGBT mzero
+  LGBT a `mplus` LGBT b = LGBT $ a `mplus` b
+
+instance MonadIO                              m
+      => MonadIO (LGBT localState globalState m) where
+  liftIO act = LGBT $ liftIO act
+
+-- | LGBT monad is sandwiching state with fair @LogicT@ transformer.
 newtype LGLT localState globalState m a =
     LGLT { _unLGLT ::
              StateT localState (LogicT (StateT globalState m)) a }
@@ -59,8 +89,8 @@ newtype LGCT localState globalState result m a = LGCT { _unLGCT ::
     StateT localState (ContT (result, localState) (StateT globalState m)) a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadCont)
 
-instance MonadTrans (LGBT localState globalState result) where
-  lift = LGBT . lift . lift . lift
+instance MonadTrans (LGBT localState globalState) where
+  lift act = LGBT $ lift $ lift $ lift act
 
 instance MonadTrans (LGLT localState globalState) where
   lift = LGLT . lift . lift . lift
@@ -101,14 +131,14 @@ getsGlobal  :: forall m localState globalState a.
 getsGlobal f = f <$> getGlobal
 
 instance Monad m
-      => MonadLGBT (LGBT localState globalState result m)
-                         localState globalState           where
-  getLocal     = LGBT                 get
-  getGlobal    = LGBT $ lift $ lift   get
-  putLocal     = LGBT .               put
-  putGlobal    = LGBT . lift . lift . put
-  modifyLocal  = LGBT .               modify
-  modifyGlobal = LGBT . lift . lift . modify
+      => MonadLGBT (LGBT localState globalState m)
+                         localState globalState    where
+  getLocal       = LGBT                 get
+  getGlobal      = LGBT $ lift $ lift   get
+  putLocal     l = LGBT $               put l
+  putGlobal    g = LGBT $ lift . lift $ put g
+  modifyLocal  m = LGBT $               modify m
+  modifyGlobal m = LGBT $ lift . lift $ modify m
 
 instance Monad m
       => MonadLGBT (LGLT localState globalState m)
@@ -146,15 +176,15 @@ withGlobal f = getGlobal >>= (lift . f) >>= putGlobal
 
 runLGBT :: forall m localState globalState result.
            Monad  m
-        => LGBT localState globalState result m result
+        => LGBT localState globalState m         result
         ->      localState
         ->                 globalState
-        ->                             m (Maybe (result, localState), globalState)
+        ->                             m (Either String (result, localState), globalState)
 runLGBT (LGBT act) localState globalState =
     runStateT (runBacktrackT (runStateT act localState) onFailure onSuccess) globalState
   where
-    onFailure = pure   Nothing
-    onSuccess = pure . Just
+    onFailure = pure . Left
+    onSuccess = pure . Right
 
 runLGLT :: forall m  result success localState globalState.
            Monad  m

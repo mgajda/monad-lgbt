@@ -24,7 +24,9 @@ source-dirs:
         - src
 
 library:
-        exposed-modules: Control.Monad.State.LGBT
+        exposed-modules:
+                - Control.Monad.State.LGBT
+                - Control.Monad.Backtrack
 
 tests:
         spec:

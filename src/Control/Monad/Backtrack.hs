@@ -11,10 +11,11 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 
-newtype BacktrackT r m a = BacktrackT { runBacktrackT :: (String -> m r)  -- ^ failure
-                                                      -> (a      -> m r) -- ^ success
-                                                      ->            m r  -- ^ result
-                                      }
+newtype BacktrackT r m a = BacktrackT {
+  runBacktrackT :: (String -> m r) -- failure
+                -> (a      -> m r) -- success
+                ->            m r  -- result
+                }
 
 instance Functor (BacktrackT r m) where
     fmap f m = BacktrackT $ \cf cs -> runBacktrackT m cf $ cs . f

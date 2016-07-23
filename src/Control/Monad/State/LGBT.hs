@@ -152,8 +152,8 @@ instance Monad m
 
 -- * These are not instance methods, since choice of transformer needs
 --   to be explicitly determined.
-withLocal :: forall (t :: (* -> *) -> * -> *) -- ^ Any transformer that makes MonadLGBT
-                          (m ::       * -> *) -- ^ Any underlying monad, below the @t@
+withLocal :: forall (t :: (* -> *) -> * -> *) -- Any transformer that makes MonadLGBT
+                          (m ::       * -> *) -- Any underlying monad, below the @t@
                              localState
                                         globalState.
             (Monad        m,
@@ -163,8 +163,8 @@ withLocal :: forall (t :: (* -> *) -> * -> *) -- ^ Any transformer that makes Mo
           -> t m ()
 withLocal f = getLocal >>= (lift . f) >>= putLocal
 
-withGlobal :: forall (t :: (* -> *) -> * -> *) -- ^ Any transformer that makes MonadLGBT
-                     (m ::  * -> *           ) -- ^ Any underlying monad, below the @t@
+withGlobal :: forall (t :: (* -> *) -> * -> *) -- Any transformer that makes MonadLGBT
+                     (m ::  * -> *           ) -- Any underlying monad, below the @t@
                               localState
                                          globalState.
              (Monad        m,

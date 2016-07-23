@@ -12,7 +12,7 @@ description: >
       Local state is backtraced whenever intervening monad transformer backtracks.
       Global state is preserved across all backtracing.
       It provides nice, classy interface for monads
-      with backtracking/backjumping/continuations.
+      with backtracking//backjumping//continuations.
 
 category: Control
 stability: beta

@@ -1,7 +1,7 @@
 # HPack configuration file
 # Run hpack to generate corresponding .cabal file.
 name: monad-lgbt
-version: 0.0.1
+version: 0.0.2
 author: Michal J. Gajda <mjgajda@gmail.com>
 maintainer: Michal J. Gajda <mjgajda@gmail.com>
 synopsis:  Monad transformers for combining local and global state.
